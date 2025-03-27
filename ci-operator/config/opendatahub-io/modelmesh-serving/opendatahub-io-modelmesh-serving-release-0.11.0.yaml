@@ -61,7 +61,7 @@ tests:
 - as: fvt
   run_if_changed: ^(apis/.*|controllers/.*|fvt/.*|pkg/.*|scripts/.*|proto/.*|config/.*|Makefile|main\.go|Dockerfile|go\.mod|go\.sum)
   steps:
-    cluster_profile: aws
+    cluster_profile: aws-opendatahub
     env:
       COMPUTE_NODE_TYPE: m5.2xlarge
     test:
@@ -84,7 +84,7 @@ tests:
 - as: fvt-odh-manifests
   run_if_changed: ^(opendatahub/odh-manifests)
   steps:
-    cluster_profile: aws
+    cluster_profile: aws-opendatahub
     env:
       COMPUTE_NODE_TYPE: m5.2xlarge
     test:
