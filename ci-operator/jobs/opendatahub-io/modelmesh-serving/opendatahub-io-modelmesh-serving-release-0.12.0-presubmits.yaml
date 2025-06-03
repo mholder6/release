@@ -1,28 +1,27 @@
-postsubmits:
+presubmits:
   opendatahub-io/modelmesh-serving:
   - agent: kubernetes
     always_run: true
     branches:
-    - ^release-v0\.11\.0-alpha$
-    cluster: build06
+    - ^release-0\.12\.0$
+    - ^release-0\.12\.0-
+    cluster: build05
+    context: ci/prow/images
     decorate: true
     decoration_config:
       skip_cloning: true
     labels:
-      ci-operator.openshift.io/is-promotion: "true"
       ci.openshift.io/generator: prowgen
-    max_concurrency: 1
-    name: branch-ci-opendatahub-io-modelmesh-serving-release-v0.11.0-alpha-images
+      pj-rehearse.openshift.io/can-be-rehearsed: "true"
+    name: pull-ci-opendatahub-io-modelmesh-serving-release-0.12.0-images
+    rerun_command: /test images
     spec:
       containers:
       - args:
         - --gcs-upload-secret=/secrets/gcs/service-account.json
         - --image-import-pull-secret=/etc/pull-secret/.dockerconfigjson
-        - --image-mirror-push-secret=/etc/push-secret/.dockerconfigjson
-        - --promote
         - --report-credentials-file=/etc/report/credentials
         - --target=[images]
-        - --target=src
         command:
         - ci-operator
         image: ci-operator:latest
@@ -41,9 +40,6 @@ postsubmits:
         - mountPath: /etc/pull-secret
           name: pull-secret
           readOnly: true
-        - mountPath: /etc/push-secret
-          name: push-secret
-          readOnly: true
         - mountPath: /etc/report
           name: result-aggregator
           readOnly: true
@@ -55,24 +51,25 @@ postsubmits:
       - name: pull-secret
         secret:
           secretName: registry-pull-credentials
-      - name: push-secret
-        secret:
-          secretName: registry-push-credentials-ci-central
       - name: result-aggregator
         secret:
           secretName: result-aggregator
+    trigger: (?m)^/test( | .* )images,?($|\s.*)
   - agent: kubernetes
     always_run: false
     branches:
-    - ^release-v0\.11\.0-alpha$
-    cluster: build06
+    - ^release-0\.12\.0$
+    - ^release-0\.12\.0-
+    cluster: build05
+    context: ci/prow/pr-image-mirror
     decorate: true
     decoration_config:
       skip_cloning: true
     labels:
       ci.openshift.io/generator: prowgen
-    max_concurrency: 1
-    name: branch-ci-opendatahub-io-modelmesh-serving-release-v0.11.0-alpha-stable-image-mirror
+      pj-rehearse.openshift.io/can-be-rehearsed: "true"
+    name: pull-ci-opendatahub-io-modelmesh-serving-release-0.12.0-pr-image-mirror
+    rerun_command: /test pr-image-mirror
     run_if_changed: ^(apis/.*|controllers/.*|fvt/.*|pkg/.*|scripts/.*|proto/.*|config/.*|Makefile|main\.go|Dockerfile|version|go\.mod|go\.sum)
     spec:
       containers:
@@ -81,7 +78,7 @@ postsubmits:
         - --image-import-pull-secret=/etc/pull-secret/.dockerconfigjson
         - --report-credentials-file=/etc/report/credentials
         - --secret-dir=/secrets/ci-pull-credentials
-        - --target=stable-image-mirror
+        - --target=pr-image-mirror
         command:
         - ci-operator
         image: ci-operator:latest
@@ -120,27 +117,30 @@ postsubmits:
       - name: result-aggregator
         secret:
           secretName: result-aggregator
+    trigger: (?m)^/test( | .* )pr-image-mirror,?($|\s.*)
   - agent: kubernetes
     always_run: false
     branches:
-    - ^release-v0\.11\.0-alpha$
-    cluster: build06
+    - ^release-0\.12\.0$
+    - ^release-0\.12\.0-
+    cluster: build05
+    context: ci/prow/unit
     decorate: true
     decoration_config:
       skip_cloning: true
     labels:
       ci.openshift.io/generator: prowgen
-    max_concurrency: 1
-    name: branch-ci-opendatahub-io-modelmesh-serving-release-v0.11.0-alpha-upstream-version-image-mirror
-    run_if_changed: ^(apis/.*|controllers/.*|fvt/.*|pkg/.*|scripts/.*|proto/.*|config/.*|Makefile|main\.go|Dockerfile|version|go\.mod|go\.sum)
+      pj-rehearse.openshift.io/can-be-rehearsed: "true"
+    name: pull-ci-opendatahub-io-modelmesh-serving-release-0.12.0-unit
+    rerun_command: /test unit
+    run_if_changed: ^(apis/.*|controllers/.*|pkg/.*|Dockerfile|main\.go|go\.mod|go\.sum)
     spec:
       containers:
       - args:
         - --gcs-upload-secret=/secrets/gcs/service-account.json
         - --image-import-pull-secret=/etc/pull-secret/.dockerconfigjson
         - --report-credentials-file=/etc/report/credentials
-        - --secret-dir=/secrets/ci-pull-credentials
-        - --target=upstream-version-image-mirror
+        - --target=unit
         command:
         - ci-operator
         image: ci-operator:latest
@@ -150,9 +150,6 @@ postsubmits:
           requests:
             cpu: 10m
         volumeMounts:
-        - mountPath: /secrets/ci-pull-credentials
-          name: ci-pull-credentials
-          readOnly: true
         - mountPath: /secrets/gcs
           name: gcs-credentials
           readOnly: true
@@ -167,9 +164,6 @@ postsubmits:
           readOnly: true
       serviceAccountName: ci-operator
       volumes:
-      - name: ci-pull-credentials
-        secret:
-          secretName: ci-pull-credentials
       - name: manifest-tool-local-pusher
         secret:
           secretName: manifest-tool-local-pusher
@@ -179,3 +173,4 @@ postsubmits:
       - name: result-aggregator
         secret:
           secretName: result-aggregator
+    trigger: (?m)^/test( | .* )unit,?($|\s.*)

@@ -95,6 +95,6 @@ tests:
       RELEASE_VERSION: fast
     workflow: opendatahub-io-ci-image-mirror
 zz_generated_metadata:
-  branch: main
+  branch: release-0.12
   org: opendatahub-io
   repo: modelmesh-serving
